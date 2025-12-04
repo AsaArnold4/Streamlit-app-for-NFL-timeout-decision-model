@@ -1,8 +1,10 @@
+# timeout_app.py
+
 import json
+import pickle  # use stdlib instead of joblib
 import numpy as np
 import pandas as pd
 import streamlit as st
-import joblib
 
 # --------------------------------------------------------------------------------
 # 1. Load model + feature columns (cached)
@@ -11,9 +13,12 @@ import joblib
 @st.cache_resource
 def load_model_and_columns():
     # Assumes these files live in the repo root
-    model = joblib.load("timeout_wp_xgb.pkl")
+    with open("timeout_wp_xgb.pkl", "rb") as f:
+        model = pickle.load(f)
+
     with open("feature_columns.json", "r") as f:
         feature_columns = json.load(f)
+
     return model, feature_columns
 
 
@@ -391,13 +396,15 @@ with tab1:
         table = make_timeout_table(probs)
 
         st.subheader("Results")
-        st.dataframe(table.style.format(
-            {
-                "wp_no_timeout": "{:.3f}",
-                "wp_timeout": "{:.3f}",
-                "timeout_boost": "{:+.3f}",
-            }
-        ))
+        st.dataframe(
+            table.style.format(
+                {
+                    "wp_no_timeout": "{:.3f}",
+                    "wp_timeout": "{:.3f}",
+                    "timeout_boost": "{:+.3f}",
+                }
+            )
+        )
 
         rec = table["recommendation"].iloc[0]
         st.success(rec)
@@ -447,13 +454,15 @@ with tab2:
         dog_table = make_delay_vs_timeout_table(dog_probs)
 
         st.subheader("Results")
-        st.dataframe(dog_table.style.format(
-            {
-                "wp_penalty": "{:.3f}",
-                "wp_timeout": "{:.3f}",
-                "dog_timeout_boost": "{:+.3f}",
-            }
-        ))
+        st.dataframe(
+            dog_table.style.format(
+                {
+                    "wp_penalty": "{:.3f}",
+                    "wp_timeout": "{:.3f}",
+                    "dog_timeout_boost": "{:+.3f}",
+                }
+            )
+        )
 
         rec2 = dog_table["recommendation"].iloc[0]
         st.success(rec2)
